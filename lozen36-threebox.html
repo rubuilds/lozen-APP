@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lozen Living Park Map</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+    <!-- Добавяме Threebox -->
+    <script src="https://cdn.jsdelivr.net/gh/jscastro76/threebox@v.2.2.2/dist/threebox.min.js" type="text/javascript"></script>
+    <link href="https://cdn.jsdelivr.net/gh/jscastro76/threebox@v.2.2.2/dist/threebox.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Calibri', 'Arial', sans-serif;
+        }
+        #map { 
+            width: 100%; 
+            height: 100vh; 
+        }
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        .logo-container:hover {
+            transform: scale(1.07);
+        }
+        .logo-container img {
+            max-width: 250px;
+            height: auto;
+        }
+        .mapboxgl-popup-content {
+            border-radius: 10px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .mapboxgl-popup-content img {
+            max-width: 200px;
+            height: auto;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 90vh;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            overflow-y: auto;
+            display: none;
+        }
+        .info-button {
+            display: flex;
+            align-items: center;
+            background: rgba(44, 62, 80, 0.5);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.3s ease, background 0.3s ease;
+            cursor: pointer;
+            height: 70px;
+            min-height: 70px;
+            box-sizing: border-box;
+        }
+        .info-button:hover {
+            transform: scale(1.02);
+            background: rgba(44, 62, 80, 0.7);
+        }
+        .info-button img {
+            width: 50px;
+            height: 50px;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .info-button-text {
+            flex: 1;
+        }
+        .info-button-text h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #FFFFFF;
+            font-family: 'Calibri', 'Arial', sans-serif;
+            font-weight: 700;
+        }
+        .info-button-text p {
+            margin: 0;
+            font-size: 12px;
+            color: #DDEEFF;
+            font-family: 'Calibri', 'Arial', sans-serif;
+            font-weight: 400;
+        }
+        #custom-popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50%;
+            max-height: 80vh;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        #custom-popup img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        #custom-popup h3 {
+            margin: 10px 0;
+            color: #2C3E50;
+        }
+        #custom-popup p {
+            margin: 0;
+            color: #7F8C8D;
+        }
+        #custom-popup-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #2C3E50;
+        }
+        #popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div class="logo-container" onclick="window.open('https://ipelpe.com/', '_blank')">
+        <img src="images/company_logo.png" alt="Logo">
+    </div>
+    <div id="info-panel">
+        <div class="info-button" data-title="Property Location" data-desc="" data-img="Images/property-location.png">
+            <img src="images/icon_location.png" alt="Image 1">
+            <div class="info-button-text">
+                <h3>Property location</h3>
+                <p>Location info</p>
+            </div>
+        </div>
+        <div class="info-button" data-title="Property Access" data-desc="Description for section 2 goes here." data-img="images/property-location.png">
+            <img src="images/icon_routes.png" alt="Image 2">
+            <div class="info-button-text">
+                <h3>Property access</h3>
+                <p>Proximity to other important locations</p>
+            </div>
+        </div>
+        <div class="info-button" data-title="Location Highlights" data-desc="Description for section 3 goes here." data-img="images/location-highlights.png">
+            <img src="images/icon_location-highlights.png" alt="Image 3">
+            <div class="info-button-text">
+                <h3>Location Highlights</h3>
+                <p>What surrounds the property.</p>
+            </div>
+        </div>
+        <div class="info-button" data-title="Property Parameters" data-desc="Description for section 4 goes here." data-img="images/property-parameters.png">
+            <img src="images/icon_property-params.png" alt="Image 4">
+            <div class="info-button-text">
+                <h3>Property Parameters</h3>
+                <p>What it allows.</p>
+            </div>
+        </div>
+        <div class="info-button" data-title="Concept" data-desc="Description for section 5 goes here." data-img="images/concept2d.png">
+            <img src="images/icon_concept2d.png" alt="Image 5">
+            <div class="info-button-text">
+                <h3>Concept</h3>
+                <p>Description for section 5 goes here.</p>
+            </div>
+        </div>
+        <div class="info-button" data-title="Concept" data-desc="Description for section 6 goes here." data-img="images/concept3d.png">
+            <img src="images/icon_concept3d.png" alt="Image 6">
+            <div class="info-button-text">
+                <h3>Concept</h3>
+                <p>Description for section 6 goes here.</p>
+            </div>
+        </div>
+        <div class="info-button" data-title="Section 7" data-desc="Description for section 7 goes here." data-img="https://via.placeholder.com/500">
+            <img src="https://via.placeholder.com/50" alt="Image 7">
+            <div class="info-button-text">
+                <h3>Section 7</h3>
+                <p>Description for section 7 goes here.</p>
+            </div>
+        </div>
+        <div class="info-button" data-title="Section 8" data-desc="Description for section 8 goes here." data-img="https://via.placeholder.com/500">
+            <img src="https://via.placeholder.com/50" alt="Image 8">
+            <div class="info-button-text">
+                <h3>Section 8</h3>
+                <p>Description for section 8 goes here.</p>
+            </div>
+        </div>
+        <div class="info-button" data-title="Section 9" data-desc="Description for section 9 goes here." data-img="https://via.placeholder.com/500">
+            <img src="https://via.placeholder.com/50" alt="Image 9">
+            <div class="info-button-text">
+                <h3>Section 9</h3>
+                <p>Description for section 9 goes here.</p>
+            </div>
+        </div>
+        <div class="info-button" data-title="Section 10" data-desc="Description for section 10 goes here." data-img="https://via.placeholder.com/500">
+            <img src="https://via.placeholder.com/50" alt="Image 10">
+            <div class="info-button-text">
+                <h3>Section 10</h3>
+                <p>Description for section 10 goes here.</p>
+            </div>
+        </div>
+    </div>
+    <div id="popup-overlay"></div>
+    <div id="custom-popup">
+        <span id="custom-popup-close">✖</span>
+        <h3 id="popup-title"></h3>
+        <img id="popup-img" src="" alt="">
+        <p id="popup-desc"></p>
+    </div>
+
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoicnVidWlsZHMiLCJhIjoiY204bXZ6cXkwMWZ1OTJscXlydHdqbTE4YyJ9.v4oYriZdPwlLzzaV663f5Q';
+
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/satellite-v9',
+            center: [25.4858, 42.6073],
+            zoom: 7,
+            pitch: 45,
+            antialias: true // За по-добро рендиране на 3D моделите
+        });
+
+        // Инициализираме Threebox
+        const tb = (window.tb = new Threebox(
+            map,
+            map.getCanvas().getContext('webgl'),
+            {
+                defaultLights: true
+            }
+        ));
+
+        map.on('load', function () {
+            console.log('Картата се зареди успешно!');
+            loadPolygons();
+            loadGeoJSON();
+            loadDistanceLines();
+        });
+
+        map.on('error', function (e) {
+            console.error('Грешка при зареждане на картата:', e);
+        });
+
+        let clickCount = 0;
+
+        const marker = new mapboxgl.Marker({ color: '#A8C5E1' })
+            .setLngLat([23.5065, 42.620639])
+            .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML("<b>Lozen Living Park</b>"))
+            .addTo(map);
+
+        marker.getElement().addEventListener('click', function() {
+            clickCount++;
+            if (clickCount === 1) {
+                map.flyTo({
+                    center: [23.4858, 42.6300],
+                    zoom: 10,
+                    pitch: 45,
+                    speed: 1.2,
+                    curve: 1.5,
+                    easing(t) { return t * (2 - t); }
+                });
+                setTimeout(() => {
+                    map.setLayoutProperty('utility-labels', 'visibility', 'visible');
+                }, 1000);
+            } else {
+                map.flyTo({
+                    center: [23.5065, 42.620639],
+                    zoom: 15,
+                    pitch: 0,
+                    speed: 1.2,
+                    curve: 1.5,
+                    easing(t) { return t * (2 - t); }
+                });
+                marker.remove();
+                document.getElementById('info-panel').style.display = 'block';
+                clickCount = 0;
+            }
+        });
+
+        function loadPolygons() {
+            const polygons = {
+                "type": "FeatureCollection",
+                "features": [
+                    {"type": "Feature", "properties": {"id": "polygon1", "image": "images/area1_photo.jpg", "title": "УПИ 14"}, "geometry": {"type": "Polygon", "coordinates": [[ [23.5017427607869, 42.62335812736135], [23.50181889996022, 42.62249273281942], [23.50188634770633, 42.622441362855], [23.50592608036144, 42.62239735773508], [23.50601693393975, 42.62245416642941], [23.50594479128721, 42.62366702215842], [23.50586862514756, 42.62371552073839], [23.50182448630481, 42.62375712949684], [23.50175077202267, 42.62371138594497], [23.5017427607869, 42.62335812736135] ]]}},
+                    {"type": "Feature", "properties": {"id": "polygon2", "image": "images/area2_photo.png", "title": "УПИ 4"}, "geometry": {"type": "Polygon", "coordinates": [[ [23.50618224943488, 42.62245149030651], [23.5062675475946, 42.62239636479249], [23.50828294225058, 42.62238023191986], [23.50851924043476, 42.62241627032063], [23.50872596433204, 42.62252495936153], [23.50918023889395, 42.62291857712057], [23.50916729439819, 42.62299815183891], [23.50826244837816, 42.62356170488617], [23.5080085846053, 42.62365206870511], [23.50775386685227, 42.62369282298943], [23.50620200246733, 42.6237142522104], [23.50611918876723, 42.62365923714437], [23.50618224943488, 42.62245149030651] ]]}},
+                    {"type": "Feature", "properties": {"id": "polygon3", "image": "images/area3_photo.jpg", "title": "УПИ 13"}, "geometry": {"type": "Polygon", "coordinates": [[ [23.50199545044382, 42.62049234997048], [23.50206835745958, 42.62043405077772], [23.50605766594975, 42.6203933673994], [23.5061224075083, 42.62045528941005], [23.50601906605347, 42.62220896449306], [23.50593161363712, 42.62227584264061], [23.50191734981549, 42.62231893746384], [23.50184315944583, 42.62226266716741], [23.50199545044382, 42.62049234997048] ]]}},
+                    {"type": "Feature", "properties": {"id": "polygon4", "image": "images/area4_photo.jpg", "title": "УПИ 12"}, "geometry": {"type": "Polygon", "coordinates": [[ [23.50216005096809, 42.61874711469942], [23.50216064211002, 42.61848080640134], [23.50223422846052, 42.61842367930807], [23.50600937491776, 42.61838934579676], [23.50608163315793, 42.61843785159257], [23.50615032302436, 42.61953889944033], [23.50613456165485, 42.62019841666775], [23.50606493998371, 42.62026058586959], [23.50210901968295, 42.62030311422871], [23.50202888413795, 42.62024779431728], [23.50216005096809, 42.61874711469942] ]]}},
+                    {"type": "Feature", "properties": {"id": "polygon5", "image": "images/area5_photo.jpg", "title": "УПИ 4"}, "geometry": {"type": "Polygon", "coordinates": [[ [23.50631711340143, 42.61997667048523], [23.50631572198499, 42.61944557019795], [23.50613655499359, 42.61647050260368], [23.50619450671337, 42.61640991554737], [23.50807776777845, 42.61639326266177], [23.50814787534524, 42.6164543948083], [23.50849662352511, 42.62219117548205], [23.50842718267029, 42.62224875896683], [23.50628601901271, 42.62227186345012], [23.50620657256863, 42.62223170733007], [23.50631711340143, 42.61997667048523] ]]}},
+                    {"type": "Feature", "properties": {"id": "polygon6", "image": "images/area6_photo.jpg", "title": "УПИ 4"}, "geometry": {"type": "Polygon", "coordinates": [[ [23.50830938048694, 42.61645351387633], [23.50838942570093, 42.61639266707252], [23.50975818538655, 42.61636868525522], [23.50987803048509, 42.61647141945699], [23.50991085492838, 42.61702255301355], [23.50992351975121, 42.61728499000651], [23.51007955211648, 42.61759992459879], [23.51044902503747, 42.61812499880048], [23.51053415691916, 42.61843011674267], [23.51073228204636, 42.62176925453286], [23.5106515462229, 42.62204771105005], [23.51041708076387, 42.62228061785623], [23.50942397875472, 42.62284429064882], [23.50932612881948, 42.62284653108505], [23.50870005735435, 42.62230683754132], [23.50867282161193, 42.62224304096549], [23.50830938048694, 42.61645351387633] ]]}},
+                    {"type": "Feature", "properties": {"id": "polygon7", "image": "images/area7_photo.jpg", "title": "УПИ 3"}, "geometry": {"type": "Polygon", "coordinates": [[ [23.50667036922956, 42.6248128954923], [23.50646223960573, 42.62476863933374], [23.50629753018972, 42.62476646013025], [23.50615799733064, 42.62477934585411], [23.50606826537365, 42.62471457038284], [23.50610970127028, 42.62389730419567], [23.50618007157501, 42.62384022270295], [23.50710416607583, 42.62382758321945], [23.5071238202487, 42.62456884618926], [23.50703516532591, 42.62459817121037], [23.50667036922956, 42.6248128954923] ]]}},
+                    {"type": "Feature", "properties": {"id": "polygon8", "image": "images/area8_photo.jpg", "title": "УПИ 3"}, "geometry": {"type": "Polygon", "coordinates": [[ [23.50712093710439, 42.62456167900474], [23.50710416607583, 42.62382758321945], [23.50762823532299, 42.6238216809196], [23.50763635382226, 42.62413406935877], [23.5078328887174, 42.62420264070843], [23.50772358666978, 42.62435568981964], [23.50712093710439, 42.62456167900474] ]]}},
+                    {"type": "Feature", "properties": {"id": "polygon9", "image": "images/area9_photo.jpg", "title": "УПИ 3"}, "geometry": {"type": "Polygon", "coordinates": [[ [23.5078298836028, 42.62420022112102], [23.50763676728318, 42.62412476324954], [23.50762792522886, 42.62382864834314], [23.5081045226739, 42.62381693916277], [23.5078298836028, 42.62420022112102] ]]}}
+                ]
+            };
+
+            polygons.features.forEach(feature => {
+                const polygon = turf.polygon(feature.geometry.coordinates);
+                const area = turf.area(polygon);
+                feature.properties.area = `${area.toFixed(2)} sqm`;
+            });
+
+            if (!map.getSource('polygons')) {
+                map.addSource('polygons', { 'type': 'geojson', 'data': polygons });
+            }
+
+            if (!map.getLayer('polygons-layer')) {
+                map.addLayer({
+                    'id': 'polygons-layer',
+                    'type': 'fill',
+                    'source': 'polygons',
+                    'paint': {
+                        'fill-color': '#A8C5E1',
+                        'fill-opacity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            10, 0.5,
+                            15, 0.7
+                        ],
+                        'fill-antialias': true,
+                        'fill-outline-color': '#1A2A44'
+                    },
+                    'filter': ['==', '$type', 'Polygon']
+                });
+            }
+
+            if (!map.getLayer('polygons-outline')) {
+                map.addLayer({
+                    'id': 'polygons-outline',
+                    'type': 'line',
+                    'source': 'polygons',
+                    'paint': {
+                        'line-color': '#1A2A44',
+                        'line-width': 16,
+                        'line-opacity': 0.8,
+                        'line-blur': 1,
+                        'line-transition': { duration: 300, delay: 0 }
+                    }
+                });
+            }
+
+            if (!map.getLayer('polygons-labels')) {
+                map.addLayer({
+                    'id': 'polygons-labels',
+                    'type': 'symbol',
+                    'source': 'polygons',
+                    'layout': {
+                        'text-field': ['get', 'area'],
+                        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                        'text-size': 12,
+                        'text-offset': [0, 0],
+                        'text-anchor': 'center',
+                        'visibility': 'none'
+                    },
+                    'paint': {
+                        'text-color': '#000000',
+                        'text-halo-color': '#FFFFFF',
+                        'text-halo-width': 1
+                    }
+                });
+            }
+
+            map.on('click', 'polygons-layer', function(e) {
+                const feature = e.features[0];
+                const title = feature.properties.title;
+                const area = feature.properties.area;
+                const image = feature.properties.image;
+
+                new mapboxgl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(`
+                        <h3>${title}</h3>
+                        <p><b>Area:</b> ${area}</p>
+                        <img src="${image}" alt="${title}">
+                    `)
+                    .addTo(map);
+            });
+
+            map.on('mouseenter', 'polygons-layer', function(e) {
+                map.getCanvas().style.cursor = 'pointer';
+                map.setPaintProperty('polygons-layer', 'fill-color', [
+                    'case',
+                    ['==', ['get', 'id'], e.features[0].properties.id],
+                    '#87A8D0',
+                    '#A8C5E1'
+                ], { duration: 300 });
+                map.setPaintProperty('polygons-outline', 'line-width', [
+                    'case',
+                    ['==', ['get', 'id'], e.features[0].properties.id],
+                    20,
+                    16
+                ], { duration: 300 });
+                map.setLayoutProperty('polygons-labels', 'visibility', 'visible');
+                map.setFilter('polygons-labels', ['==', ['get', 'id'], e.features[0].properties.id]);
+            });
+
+            map.on('mouseleave', 'polygons-layer', function() {
+                map.getCanvas().style.cursor = '';
+                map.setPaintProperty('polygons-layer', 'fill-color', '#A8C5E1', { duration: 150 });
+                map.setPaintProperty('polygons-outline', 'line-width', 16, { duration: 150 });
+                map.setLayoutProperty('polygons-labels', 'visibility', 'none');
+                map.setFilter('polygons-labels', null);
+            });
+        }
+
+        function loadGeoJSON() {
+            const geojson = {
+                "type": "FeatureCollection",
+                "features": [
+                    { "type": "Feature", "properties": { "marker-color": "rgb(168, 197, 225)" }, "geometry": { "type": "Point", "coordinates": [23.5065, 42.620639] } },
+                    { "type": "Feature", "properties": { "stroke": "rgb(244, 167, 185)", "title": "Substation Kazichene", "type": "electricity" }, "geometry": { "type": "LineString", "coordinates": [[23.471159785492773, 42.65025834444231], [23.471710590797983, 42.65184986297069], [23.521093091923944, 42.64113331427657], [23.51169005851139, 42.62570568084962], [23.50751967549212, 42.62634254438919], [23.50692952695212, 42.626110958401455], [23.506418064883263, 42.624489832363395]] } },
+                    { "type": "Feature", "properties": { "marker-color": "rgb(244, 167, 185)", "title": "Substation Kazichene" }, "geometry": { "type": "Point", "coordinates": [23.471159785492773, 42.65025834444231] } },
+                    { "type": "Feature", "properties": { "stroke": "rgb(52, 152, 219)", "title": "Supply water pipeline Ø300 mm", "type": "water" }, "geometry": { "type": "LineString", "coordinates": [[23.445908028975595, 42.626286202610004], [23.458382270427023, 42.61617518847916], [23.46433444655034, 42.617806108268496], [23.46864027608703, 42.6183652709349], [23.47376927891702, 42.617806108268496], [23.476808688001682, 42.61682756152064], [23.484217247644892, 42.61678096367305], [23.48624352037649, 42.61608199181694], [23.49795790955642, 42.616035393410954], [23.49878108284969, 42.61561600619132], [23.5019471339792, 42.615895597984775], [23.50226373909308, 42.6185982539412]] } },
+                    { "type": "Feature", "properties": { "marker-color": "rgb(52, 152, 219)", "title": "Supply water pipeline Ø300 mm" }, "geometry": { "type": "Point", "coordinates": [23.445908028975595, 42.626286202610004] } }
+                ]
+            };
+
+            if (!map.getSource('utilities')) {
+                map.addSource('utilities', { type: 'geojson', data: geojson });
+            }
+
+            if (!map.getLayer('water-line')) {
+                map.addLayer({
+                    'id': 'water-line',
+                    'type': 'line',
+                    'source': 'utilities',
+                    'filter': ['==', ['get', 'type'], 'water'],
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': 'rgb(0, 191, 255)',
+                        'line-width': 3,
+                        'line-dasharray': [2, 2]
+                    }
+                });
+            }
+
+            if (!map.getLayer('electricity-line')) {
+                map.addLayer({
+                    'id': "electricity-line",
+                    'type': 'line',
+                    'source': 'utilities',
+                    'filter': ['==', ['get', 'type'], 'electricity'],
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': 'rgb(255, 215, 0)',
+                        'line-width': 3,
+                        'line-dasharray': [2, 2]
+                    }
+                });
+            }
+
+            if (!map.getLayer('utility-points')) {
+                map.addLayer({
+                    id: 'utility-points',
+                    type: 'circle',
+                    source: 'utilities',
+                    filter: ['has', 'marker-color'],
+                    paint: {
+                        'circle-radius': 6,
+                        'circle-color': ['get', 'marker-color'],
+                        'circle-opacity': 0.9,
+                        'circle-stroke-width': 2,
+                        'circle-stroke-color': 'rgb(255, 255, 255)'
+                    }
+                });
+            }
+
+            if (!map.getLayer('utility-labels')) {
+                map.addLayer({
+                    id: 'utility-labels',
+                    type: 'symbol',
+                    source: 'utilities',
+                    filter: ['has', 'title'],
+                    layout: {
+                        'text-field': ['get', 'title'],
+                        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                        'text-size': 12,
+                        'text-offset': [0, 1.5],
+                        'text-anchor': 'top',
+                        'visibility': 'none'
+                    },
+                    paint: {
+                        'text-color': 'rgb(0, 0, 0)',
+                        'text-halo-color': 'rgb(255, 255, 255)',
+                        'text-halo-width': 1
+                    }
+                });
+            }
+
+            // Добавяне на 3D моделите с Threebox
+            if (!map.getLayer('3d-model-layer')) {
+                map.addLayer({
+                    id: '3d-model-layer',
+                    type: 'custom',
+                    renderingMode: '3d',
+                    onAdd: function () {
+                        const baseCoords = [23.501949770585263, 42.62519333208837];
+                        const modelUrls = [
+                            'https://cors-anywhere.herokuapp.com/https://drive.google.com/uc?export=download&id=1j8npPEKPxxJzGLF6Gb6a13PfkBKWsn4b',
+                            // Добави останалите URL адреси за plot2.gltf до plot10.gltf
+                        ];
+
+                        modelUrls.forEach((url, index) => {
+                            const scale = 1.0; // Коригирай мащаба според нуждите
+                            const options = {
+                                obj: url,
+                                type: 'gltf',
+                                scale: { x: scale, y: scale, z: scale },
+                                units: 'meters',
+                                rotation: { x: 90, y: -90, z: 0 }
+                            };
+
+                            tb.loadObj(options, (model) => {
+                                const offset = index * 0.0001;
+                                model.setCoords([baseCoords[0] + offset, baseCoords[1]]);
+                                model.setRotation({ x: 0, y: 0, z: 0 });
+                                tb.add(model);
+                            });
+                        });
+                    },
+                    render: function () {
+                        tb.update();
+                    }
+                });
+            }
+        }
+
+        map.on('click', 'utility-points', function(e) {
+            const feature = e.features[0];
+            const title = feature.properties.title;
+
+            new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(`<h3>${title}</h3>`)
+                .addTo(map);
+        });
+
+        map.on('mouseenter', 'utility-points', function() {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', 'utility-points', function() {
+            map.getCanvas().style.cursor = '';
+        });
+
+        function loadDistanceLines() {
+            const distanceLines = {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": { "title": "To Plovdiv (via highway)", "distance": "120 km", "time": "1h 20min" },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [23.5065, 42.620639],
+                                [23.485, 42.615],
+                                [23.315, 42.696]
+                            ]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "title": "To Sofia Airport", "distance": "20 km", "time": "25min" },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [23.5065, 42.620639],
+                                [23.408, 42.695]
+                            ]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "title": "To Sofia Center", "distance": "15 km", "time": "20min" },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [23.5065, 42.620639],
+                                [23.321, 42.697]
+                            ]
+                        }
+                    }
+                ]
+            };
+
+            if (!map.getSource('distance-lines')) {
+                map.addSource('distance-lines', { type: 'geojson', data: distanceLines });
+            }
+
+            if (!map.getLayer('distance-lines-layer')) {
+                map.addLayer({
+                    id: 'distance-lines-layer',
+                    type: 'line',
+                    source: 'distance-lines',
+                    paint: {
+                        'line-color': '#7F8C8D',
+                        'line-width': 2,
+                        'line-opacity': 0.8,
+                        'line-dasharray': [1, 2]
+                    }
+                });
+            }
+
+            if (!map.getLayer('distance-labels')) {
+                map.addLayer({
+                    id: 'distance-labels',
+                    type: 'symbol',
+                    source: 'distance-lines',
+                    layout: {
+                        'text-field': ['concat', ['get', 'title'], '\n', ['get', 'distance'], ' (', ['get', 'time'], ')'],
+                        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                        'text-size': 12,
+                        'text-offset': [0, 1],
+                        'text-anchor': 'center'
+                    },
+                    paint: {
+                        'text-color': '#2C3E50',
+                        'text-halo-color': '#FFFFFF',
+                        'text-halo-width': 1
+                    }
+                });
+            }
+        }
+
+        document.querySelectorAll('.info-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const title = this.getAttribute('data-title');
+                const desc = this.getAttribute('data-desc');
+                const img = this.getAttribute('data-img');
+
+                document.getElementById('popup-title').textContent = title;
+                document.getElementById('popup-desc').textContent = desc;
+                document.getElementById('popup-img').src = img;
+
+                document.getElementById('custom-popup').style.display = 'block';
+                document.getElementById('popup-overlay').style.display = 'block';
+            });
+        });
+
+        document.getElementById('custom-popup-close').addEventListener('click', function() {
+            document.getElementById('custom-popup').style.display = 'none';
+            document.getElementById('popup-overlay').style.display = 'none';
+        });
+    </script>
+</body>
+</html>
