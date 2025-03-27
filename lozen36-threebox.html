@@ -508,54 +508,39 @@
                 });
             }
 
-            // Добавяне на 3D моделите с Threebox
-            if (!map.getLayer('3d-model-layer')) {
-                map.addLayer({
-                    id: '3d-model-layer',
-                    type: 'custom',
-                    renderingMode: '3d',
-                    onAdd: function () {
-                        const baseCoords = [23.501949770585263, 42.62519333208837];
-                        const modelUrls = [
-                            'https://raw.githubusercontent.com/rubuilds/lozen-APP/main/models/plot1/plot1.gltf',
-                            '',
-                            '',
-                            '',
-                            '',
-                            '',
-                            '',
-                            '',
-                            '',
-                            ''
-                        ];
+            // Добавяне на 3D модел с Threebox
+if (!map.getLayer('3d-model-layer')) {
+    map.addLayer({
+        id: '3d-model-layer',
+        type: 'custom',
+        renderingMode: '3d',
+        onAdd: function () {
+            const baseCoords = [23.501949770585263, 42.62519333208837];
+            const modelUrl = 'https://raw.githubusercontent.com/rubuilds/lozen-APP/main/models/plot1/plot1.gltf';
 
-                        modelUrls.forEach((url, index) => {
-                            const scale = 1.0; // Коригирай мащаба според нуждите
-                            const options = {
-                                obj: url,
-                                type: 'gltf',
-                                scale: scale, // Threebox приема единна стойност за мащаб
-                                units: 'meters',
-                                rotation: { x: 90, y: -90, z: 0 } // Коригираме ориентацията
-                            };
+            const scale = 1.0; // Коригирай мащаба според нуждите
+            const options = {
+                obj: modelUrl,
+                type: 'gltf',
+                scale: scale, // Threebox приема единна стойност за мащаб
+                units: 'meters',
+                rotation: { x: 90, y: -90, z: 0 } // Коригираме ориентацията
+            };
 
-                            tb.loadObj(options, (model) => {
-                                const offset = index * 0.0001; // Разстояние между моделите
-                                model.setCoords([baseCoords[0] + offset, baseCoords[1]]);
-                                model.setRotation({ x: 0, y: 0, z: 0 }); // Допълнителна ротация, ако е нужна
-                                tb.add(model);
-                                console.log(`Model ${index + 1} loaded at coordinates:`, [baseCoords[0] + offset, baseCoords[1]]);
-                            }, (error) => {
-                                console.error(`Failed to load model ${url}:`, error);
-                            });
-                        });
-                    },
-                    render: function () {
-                        tb.update(); // Threebox се грижи за рендирането
-                    }
-                });
-            }
+            tb.loadObj(options, (model) => {
+                model.setCoords(baseCoords);
+                model.setRotation({ x: 0, y: 0, z: 0 }); // Допълнителна ротация, ако е нужна
+                tb.add(model);
+                console.log(`Model loaded at coordinates:`, baseCoords);
+            }, (error) => {
+                console.error(`Failed to load model ${modelUrl}:`, error);
+            });
+        },
+        render: function () {
+            tb.update(); // Threebox се грижи за рендирането
         }
+    });
+}
 
         map.on('click', 'utility-points', function(e) {
             const feature = e.features[0];
