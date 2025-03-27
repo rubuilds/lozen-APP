@@ -243,15 +243,20 @@
             pitch: 45,
             antialias: true // За по-добро рендиране на 3D моделите
         });
-
-        // Инициализираме Threebox
-        const tb = (window.tb = new Threebox(
-            map,
-            map.getCanvas().getContext('webgl'),
-            {
-                defaultLights: true
-            }
-        ));
+        
+        // Инициализираме Threebox с проверка за WebGL контекста
+const context = map.getCanvas().getContext('webgl') || map.getCanvas().getContext('webgl2');
+if (!context) {
+    console.error('WebGL context not available. Threebox cannot be initialized.');
+} else {
+    const tb = (window.tb = new Threebox(
+        map,
+        context,
+        {
+            defaultLights: true
+        }
+    ));
+}
 
         map.on('load', function () {
             console.log('Картата се зареди успешно!');
@@ -507,40 +512,40 @@
                 });
             }
 
-            // Добавяне на 3D модел с Threebox
-if (!map.getLayer('3d-model-layer')) {
-    map.addLayer({
-        id: '3d-model-layer',
-        type: 'custom',
-        renderingMode: '3d',
-        onAdd: function () {
-            const baseCoords = [23.501949770585263, 42.62519333208837];
-            const modelUrl = 'https://raw.githubusercontent.com/rubuilds/lozen-APP/main/models/plot1/plot1.gltf';
+                        // Добавяне на 3D модел с Threebox
+            if (!map.getLayer('3d-model-layer')) {
+                map.addLayer({
+                    id: '3d-model-layer',
+                    type: 'custom',
+                    renderingMode: '3d',
+                    onAdd: function () {
+                        const baseCoords = [23.501949770585263, 42.62519333208837];
+                        const modelUrl = 'https://raw.githubusercontent.com/rubuilds/lozen-APP/main/models/plot1/plot1.gltf';
 
-            const scale = 1.0; // Коригирай мащаба според нуждите
-            const options = {
-                obj: modelUrl,
-                type: 'gltf',
-                scale: scale, // Threebox приема единна стойност за мащаб
-                units: 'meters',
-                rotation: { x: 90, y: -90, z: 0 } // Коригираме ориентацията
-            };
+                        const scale = 1.0; // Коригирай мащаба според нуждите
+                        const options = {
+                            obj: modelUrl,
+                            type: 'gltf',
+                            scale: scale, // Threebox приема единна стойност за мащаб
+                            units: 'meters',
+                            rotation: { x: 90, y: -90, z: 0 } // Коригираме ориентацията
+                        };
 
-            tb.loadObj(options, (model) => {
-                model.setCoords(baseCoords);
-                model.setRotation({ x: 0, y: 0, z: 0 }); // Допълнителна ротация, ако е нужна
-                tb.add(model);
-                console.log(`Model loaded at coordinates:`, baseCoords);
-            }, (error) => {
-                console.error(`Failed to load model ${modelUrl}:`, error);
-            });
-        },
-        render: function () {
-            tb.update(); // Threebox се грижи за рендирането
-        }
-    });
-}
-
+                        tb.loadObj(options, (model) => {
+                            model.setCoords(baseCoords);
+                            model.setRotation({ x: 0, y: 0, z: 0 }); // Допълнителна ротация, ако е нужна
+                            tb.add(model);
+                            console.log(`Model loaded at coordinates:`, baseCoords);
+                        }, (error) => {
+                            console.error(`Failed to load model ${modelUrl}:`, error);
+                        });
+                    },
+                    render: function () {
+                        tb.update(); // Threebox се грижи за рендирането
+                    }
+                });
+            }
+        } // Добавяме липсващата затваряща скоба за функцията loadGeoJSON()
         map.on('click', 'utility-points', function(e) {
             const feature = e.features[0];
             const title = feature.properties.title;
