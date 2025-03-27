@@ -347,19 +347,18 @@
             }
 
             if (!map.getLayer('polygons-outline')) {
-                map.addLayer({
-                    'id': 'polygons-outline',
-                    'type': 'line',
-                    'source': 'polygons',
-                    'paint': {
-                        'line-color': '#1A2A44',
-                        'line-width': 16,
-                        'line-opacity': 0.8,
-                        'line-blur': 1,
-                        'line-transition': { duration: 300, delay: 0 }
-                    }
-                });
-            }
+    map.addLayer({
+        'id': 'polygons-outline',
+        'type': 'line',
+        'source': 'polygons',
+        'paint': {
+            'line-color': '#1A2A44',
+            'line-width': 16,
+            'line-opacity': 0.8,
+            'line-blur': 1
+        }
+    });
+}
 
             if (!map.getLayer('polygons-labels')) {
                 map.addLayer({
