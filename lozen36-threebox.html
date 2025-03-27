@@ -4,14 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lozen Living Park Map</title>
-    <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
-    <!-- Добавяме Threebox -->
-    <script src="https://cdn.jsdelivr.net/gh/jscastro76/threebox@v.2.2.2/dist/threebox.min.js" type="text/javascript"></script>
-    <link href="https://cdn.jsdelivr.net/gh/jscastro76/threebox@v.2.2.2/dist/threebox.css" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet"/>
     <style>
-        body {
-            font-family: 'Calibri', 'Arial', sans-serif;
+         body {
+            font-family: 'Calibri', 'Arial', sans-serif; /* Промяна на шрифт */
         }
         #map { 
             width: 100%; 
@@ -58,21 +54,21 @@
             display: none;
         }
         .info-button {
-            display: flex;
-            align-items: center;
-            background: rgba(44, 62, 80, 0.5);
-            border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 10px;
-            transition: transform 0.3s ease, background 0.3s ease;
-            cursor: pointer;
-            height: 70px;
-            min-height: 70px;
-            box-sizing: border-box;
-        }
+    display: flex;
+    align-items: center;
+    background: rgba(44, 62, 80, 0.5); /* Тъмно сиво с 50% прозрачност */
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+    transition: transform 0.3s ease, background 0.3s ease;
+    cursor: pointer;
+    height: 70px; /* Фиксирана височина за всички бутони */
+    min-height: 70px; /* Минимална височина, ако съдържанието е по-голямо */
+    box-sizing: border-box; /* Увери се, че padding не увеличава размера */
+}
         .info-button:hover {
             transform: scale(1.02);
-            background: rgba(44, 62, 80, 0.7);
+            background: rgba(44, 62, 80, 0.7); /* Леко по-тъмно при ховер */
         }
         .info-button img {
             width: 50px;
@@ -84,19 +80,19 @@
             flex: 1;
         }
         .info-button-text h3 {
-            margin: 0;
-            font-size: 14px;
-            color: #FFFFFF;
-            font-family: 'Calibri', 'Arial', sans-serif;
-            font-weight: 700;
-        }
-        .info-button-text p {
-            margin: 0;
-            font-size: 12px;
-            color: #DDEEFF;
-            font-family: 'Calibri', 'Arial', sans-serif;
-            font-weight: 400;
-        }
+    margin: 0;
+    font-size: 14px;
+    color: #FFFFFF;
+    font-family: 'Calibri', 'Arial', sans-serif;
+    font-weight: 700; /* По-дебел шрифт за заглавията, както е в първите два бутона */
+}
+.info-button-text p {
+    margin: 0;
+    font-size: 12px;
+    color: #DDEEFF;
+    font-family: 'Calibri', 'Arial', sans-serif;
+    font-weight: 400; /* Нормална дебелина за описанието */
+}
         #custom-popup {
             display: none;
             position: fixed;
@@ -231,77 +227,60 @@
         <p id="popup-desc"></p>
     </div>
 
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js"></script>
     <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
     <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoicnVidWlsZHMiLCJhIjoiY204bXZ6cXkwMWZ1OTJscXlydHdqbTE4YyJ9.v4oYriZdPwlLzzaV663f5Q';
+        mapboxgl.accessToken = 'pk.eyJ1IjoicnVidWlsZHMiLCJhIjoiY204bXQ3c2RkMWdtZjJrc2VpbzZtYTZpZCJ9.ZFG9aj1t53ONm5TUFYXLhg';
 
-        const map = new mapboxgl.Map({
+        var map = new mapboxgl.Map({
             container: 'map',
-            style: 'mapbox://styles/mapbox/satellite-v9',
+            style: 'mapbox://styles/rubuilds/cm8ptjoh8007l01sa2vkv47pl',
             center: [25.4858, 42.6073],
             zoom: 7,
-            pitch: 45,
-            antialias: true // За по-добро рендиране на 3D моделите
+            pitch: 45
         });
-        
-        // Инициализираме Threebox с проверка за WebGL контекста
-const context = map.getCanvas().getContext('webgl') || map.getCanvas().getContext('webgl2');
-if (!context) {
-    console.error('WebGL context not available. Threebox cannot be initialized.');
-} else {
-    const tb = (window.tb = new Threebox(
-        map,
-        context,
-        {
-            defaultLights: true
-        }
-    ));
-}
 
-        map.on('load', function () {
-            console.log('Картата се зареди успешно!');
+        var clickCount = 0;
+        
+
+        var marker = new mapboxgl.Marker({ color: '#A8C5E1' })
+    .setLngLat([23.5065, 42.620639])
+    .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML("<b>Lozen Living Park</b>"))
+    .addTo(map);
+
+marker.getElement().addEventListener('click', function() {
+    clickCount++;
+    if (clickCount === 1) {
+        map.flyTo({
+            center: [23.4858, 42.6300],
+            zoom: 10,
+            pitch: 45,
+            speed: 1.2,
+            curve: 1.5,
+            easing(t) { return t * (2 - t); }
+        });
+        setTimeout(() => {
+            map.setLayoutProperty('utility-labels', 'visibility', 'visible');
+        }, 1000);
+    } else {
+        map.flyTo({
+            center: [23.5065, 42.620639],
+            zoom: 15,
+            pitch: 0,
+            speed: 1.2,
+            curve: 1.5,
+            easing(t) { return t * (2 - t); }
+        });
+        marker.remove();
+        document.getElementById('info-panel').style.display = 'block';
+        clickCount = 0;
+    }
+    loadGeoJSON();
+});
+
+        map.on('load', function() {
             loadPolygons();
             loadGeoJSON();
-        });
-
-        map.on('error', function (e) {
-            console.error('Грешка при зареждане на картата:', e);
-        });
-
-        let clickCount = 0;
-
-        const marker = new mapboxgl.Marker({ color: '#A8C5E1' })
-            .setLngLat([23.5065, 42.620639])
-            .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML("<b>Lozen Living Park</b>"))
-            .addTo(map);
-
-        marker.getElement().addEventListener('click', function() {
-            clickCount++;
-            if (clickCount === 1) {
-                map.flyTo({
-                    center: [23.4858, 42.6300],
-                    zoom: 10,
-                    pitch: 45,
-                    speed: 1.2,
-                    curve: 1.5,
-                    easing(t) { return t * (2 - t); }
-                });
-                setTimeout(() => {
-                    map.setLayoutProperty('utility-labels', 'visibility', 'visible');
-                }, 1000);
-            } else {
-                map.flyTo({
-                    center: [23.5065, 42.620639],
-                    zoom: 15,
-                    pitch: 0,
-                    speed: 1.2,
-                    curve: 1.5,
-                    easing(t) { return t * (2 - t); }
-                });
-                marker.remove();
-                document.getElementById('info-panel').style.display = 'block';
-                clickCount = 0;
-            }
         });
 
         function loadPolygons() {
@@ -326,65 +305,58 @@ if (!context) {
                 feature.properties.area = `${area.toFixed(2)} sqm`;
             });
 
-            if (!map.getSource('polygons')) {
-                map.addSource('polygons', { 'type': 'geojson', 'data': polygons });
-            }
+            map.addSource('polygons', { 'type': 'geojson', 'data': polygons });
 
-            if (!map.getLayer('polygons-layer')) {
-                map.addLayer({
-                    'id': 'polygons-layer',
-                    'type': 'fill',
-                    'source': 'polygons',
-                    'paint': {
-                        'fill-color': '#A8C5E1',
-                        'fill-opacity': [
-                            'interpolate',
-                            ['linear'],
-                            ['zoom'],
-                            10, 0.5,
-                            15, 0.7
-                        ],
-                        'fill-antialias': true,
-                        'fill-outline-color': '#1A2A44'
-                    },
-                    'filter': ['==', '$type', 'Polygon']
-                });
-            }
+            map.addLayer({
+                'id': 'polygons-layer',
+                'type': 'fill',
+                'source': 'polygons',
+                'paint': {
+                    'fill-color': '#A8C5E1',
+                    'fill-opacity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        10, 0.5,
+                        15, 0.7
+                    ],
+                    'fill-antialias': true,
+                    'fill-outline-color': '#1A2A44'
+                },
+                'filter': ['==', '$type', 'Polygon']
+            });
 
-            if (!map.getLayer('polygons-outline')) {
-    map.addLayer({
-        'id': 'polygons-outline',
-        'type': 'line',
-        'source': 'polygons',
-        'paint': {
-            'line-color': '#1A2A44',
-            'line-width': 16,
-            'line-opacity': 0.8,
-            'line-blur': 1
-        }
-    });
-}
+            map.addLayer({
+                'id': 'polygons-outline',
+                'type': 'line',
+                'source': 'polygons',
+                'paint': {
+                    'line-color': '#1A2A44',
+                    'line-width': 16,
+                    'line-opacity': 0.8,
+                    'line-blur': 1,
+                    'line-transition': { duration: 300, delay: 0 }
+                }
+            });
 
-            if (!map.getLayer('polygons-labels')) {
-                map.addLayer({
-                    'id': 'polygons-labels',
-                    'type': 'symbol',
-                    'source': 'polygons',
-                    'layout': {
-                        'text-field': ['get', 'area'],
-                        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
-                        'text-size': 12,
-                        'text-offset': [0, 0],
-                        'text-anchor': 'center',
-                        'visibility': 'none'
-                    },
-                    'paint': {
-                        'text-color': '#000000',
-                        'text-halo-color': '#FFFFFF',
-                        'text-halo-width': 1
-                    }
-                });
-            }
+            map.addLayer({
+                'id': 'polygons-labels',
+                'type': 'symbol',
+                'source': 'polygons',
+                'layout': {
+                    'text-field': ['get', 'area'],
+                    'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                    'text-size': 12,
+                    'text-offset': [0, 0],
+                    'text-anchor': 'center',
+                    'visibility': 'none'
+                },
+                'paint': {
+                    'text-color': '#000000',
+                    'text-halo-color': '#FFFFFF',
+                    'text-halo-width': 1
+                }
+            });
 
             map.on('click', 'polygons-layer', function(e) {
                 const feature = e.features[0];
@@ -403,166 +375,204 @@ if (!context) {
             });
 
             map.on('mouseenter', 'polygons-layer', function(e) {
-                map.getCanvas().style.cursor = 'pointer';
-                map.setPaintProperty('polygons-layer', 'fill-color', [
-                    'case',
-                    ['==', ['get', 'id'], e.features[0].properties.id],
-                    '#87A8D0',
-                    '#A8C5E1'
-                ], { duration: 300 });
-                map.setLayoutProperty('polygons-labels', 'visibility', 'visible');
-                map.setFilter('polygons-labels', ['==', ['get', 'id'], e.features[0].properties.id]);
-            });
+    map.getCanvas().style.cursor = 'pointer';
+    map.setPaintProperty('polygons-layer', 'fill-color', [
+        'case',
+        ['==', ['get', 'id'], e.features[0].properties.id],
+        '#87A8D0', // Потъмняване само на избрания полигон
+        '#A8C5E1'  // Останалите остават нормални
+    ], { duration: 300 });
+    map.setPaintProperty('polygons-outline', 'line-width', [
+        'case',
+        ['==', ['get', 'id'], e.features[0].properties.id],
+        20, // Увеличение само на избрания полигон
+        16  // Останалите остават нормални
+    ], { duration: 300 });
+    map.setLayoutProperty('polygons-labels', 'visibility', 'visible');
+    map.setFilter('polygons-labels', ['==', ['get', 'id'], e.features[0].properties.id]);
+});
 
             map.on('mouseleave', 'polygons-layer', function() {
-                map.getCanvas().style.cursor = '';
-                map.setPaintProperty('polygons-layer', 'fill-color', '#A8C5E1', { duration: 150 });
-                map.setLayoutProperty('polygons-labels', 'visibility', 'none');
-                map.setFilter('polygons-labels', null);
-            });
+    map.getCanvas().style.cursor = '';
+    map.setPaintProperty('polygons-layer', 'fill-color', '#A8C5E1', { duration: 150 });
+    map.setPaintProperty('polygons-outline', 'line-width', 16, { duration: 150 });
+    map.setLayoutProperty('polygons-labels', 'visibility', 'none');
+    map.setFilter('polygons-labels', null);
+});
         }
 
         function loadGeoJSON() {
             const geojson = {
                 "type": "FeatureCollection",
+    "features": [
+        { "type": "Feature", "properties": { "marker-color": "#A8C5E1" }, "geometry": { "type": "Point", "coordinates": [23.5065, 42.620639] } },
+        { "type": "Feature", "properties": { "stroke": "#F4A7B9", "title": "Substation Kazichene", "type": "electricity" }, "geometry": { "type": "LineString", "coordinates": [[23.471159785492773, 42.65025834444231], [23.471710590797983, 42.65184986297069], [23.521093091923944, 42.64113331427657], [23.51169005851139, 42.62570568084962], [23.50751967549212, 42.62634254438919], [23.50692952695212, 42.626110958401455], [23.506418064883263, 42.624489832363395]] } },
+        { "type": "Feature", "properties": { "marker-color": "#F4A7B9", "title": "Substation Kazichene" }, "geometry": { "type": "Point", "coordinates": [23.471159785492773, 42.65025834444231] } },
+        { "type": "Feature", "properties": { "stroke": "#3498DB", "title": "Supply water pipeline Ø300 mm", "type": "water" }, "geometry": { "type": "LineString", "coordinates": [[23.445908028975595, 42.626286202610004], [23.458382270427023, 42.61617518847916], [23.46433444655034, 42.617806108268496], [23.46864027608703, 42.6183652709349], [23.47376927891702, 42.617806108268496], [23.476808688001682, 42.61682756152064], [23.484217247644892, 42.61678096367305], [23.48624352037649, 42.61608199181694], [23.49795790955642, 42.616035393410954], [23.49878108284969, 42.61561600619132], [23.5019471339792, 42.615895597984775], [23.50226373909308, 42.6185982539412]] } },
+        { "type": "Feature", "properties": { "marker-color": "#3498DB", "title": "Supply water pipeline Ø300 mm" }, "geometry": { "type": "Point", "coordinates": [23.445908028975595, 42.626286202610004] } }
+    ]
+};
+
+            map.addSource('utilities', { type: 'geojson', data: geojson });
+
+            map.addLayer({
+    'id': 'water-line',
+    'type': 'line',
+    'source': 'utilities',
+    'filter': ['==', ['get', 'type'], 'water'], // Показва само линиите с type: 'water'
+    'layout': {
+        'line-join': 'round',
+        'line-cap': 'round'
+    },
+    'paint': {
+        'line-color': 'rgb(0, 191, 255)', // Цвят на линия за вода
+        'line-width': 3,
+        'line-dasharray': [2, 2]
+    }
+});
+
+map.addLayer({
+    'id': "electricity-line",
+    'type': 'line',
+    'source': 'utilities',
+    'filter': ['==', ['get', 'type'], 'electricity'], // Показва само линиите с type: 'electricity'
+    'layout': {
+        'line-join': 'round',
+        'line-cap': 'round'
+    },
+    'paint': {
+        'line-color': 'rgb(232, 43, 43)', // Цвят на линия за електричество
+        'line-width': 3,
+        'line-dasharray': [2, 2]
+    }
+});
+
+            map.addLayer({
+                id: 'utility-points',
+                type: 'circle',
+                source: 'utilities',
+                filter: ['has', 'marker-color'],
+                paint: {
+                    'circle-radius': 6,
+                    'circle-color': ['get', 'marker-color'],
+                    'circle-opacity': 0.9,
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#FFFFFF'
+                }
+            });
+
+            map.addLayer({
+                id: 'utility-labels',
+                type: 'symbol',
+                source: 'utilities',
+                filter: ['has', 'title'],
+                layout: {
+                    'text-field': ['get', 'title'],
+                    'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                    'text-size': 12,
+                    'text-offset': [0, 1.5],
+                    'text-anchor': 'top',
+                    'visibility': 'none'
+                },
+                paint: {
+                    'text-color': '#000000',
+                    'text-halo-color': '#FFFFFF',
+                    'text-halo-width': 1
+                }
+            });
+
+            map.on('click', 'utility-points', function(e) {
+                const feature = e.features[0];
+                const title = feature.properties.title;
+
+                new mapboxgl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(`<h3>${title}</h3>`)
+                    .addTo(map);
+            });
+
+            map.on('mouseenter', 'utility-points', function() {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'utility-points', function() {
+                map.getCanvas().style.cursor = '';
+            });
+        }
+
+        function loadDistanceLines() {
+            const distanceLines = {
+                "type": "FeatureCollection",
                 "features": [
-                    { "type": "Feature", "properties": { "marker-color": "rgb(168, 197, 225)" }, "geometry": { "type": "Point", "coordinates": [23.5065, 42.620639] } },
-                    { "type": "Feature", "properties": { "stroke": "rgb(244, 167, 185)", "title": "Substation Kazichene", "type": "electricity" }, "geometry": { "type": "LineString", "coordinates": [[23.471159785492773, 42.65025834444231], [23.471710590797983, 42.65184986297069], [23.521093091923944, 42.64113331427657], [23.51169005851139, 42.62570568084962], [23.50751967549212, 42.62634254438919], [23.50692952695212, 42.626110958401455], [23.506418064883263, 42.624489832363395]] } },
-                    { "type": "Feature", "properties": { "marker-color": "rgb(244, 167, 185)", "title": "Substation Kazichene" }, "geometry": { "type": "Point", "coordinates": [23.471159785492773, 42.65025834444231] } },
-                    { "type": "Feature", "properties": { "stroke": "rgb(52, 152, 219)", "title": "Supply water pipeline Ø300 mm", "type": "water" }, "geometry": { "type": "LineString", "coordinates": [[23.445908028975595, 42.626286202610004], [23.458382270427023, 42.61617518847916], [23.46433444655034, 42.617806108268496], [23.46864027608703, 42.6183652709349], [23.47376927891702, 42.617806108268496], [23.476808688001682, 42.61682756152064], [23.484217247644892, 42.61678096367305], [23.48624352037649, 42.61608199181694], [23.49795790955642, 42.616035393410954], [23.49878108284969, 42.61561600619132], [23.5019471339792, 42.615895597984775], [23.50226373909308, 42.6185982539412]] } },
-                    { "type": "Feature", "properties": { "marker-color": "rgb(52, 152, 219)", "title": "Supply water pipeline Ø300 mm" }, "geometry": { "type": "Point", "coordinates": [23.445908028975595, 42.626286202610004] } }
+                    {
+                        "type": "Feature",
+                        "properties": { "title": "To Plovdiv (via highway)", "distance": "120 km", "time": "1h 20min" },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [23.5065, 42.620639], // Imot
+                                [23.485, 42.615],     // Highway turn
+                                [23.315, 42.696]      // Plovdiv
+                            ]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "title": "To Sofia Airport", "distance": "20 km", "time": "25min" },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [23.5065, 42.620639], // Imot
+                                [23.408, 42.695]      // Sofia Airport
+                            ]
+                        }
+                    },
+                    {
+                        "type": "Feature",
+                        "properties": { "title": "To Sofia Center", "distance": "15 km", "time": "20min" },
+                        "geometry": {
+                            "type": "LineString",
+                            "coordinates": [
+                                [23.5065, 42.620639], // Imot
+                                [23.321, 42.697]      // Sofia Center
+                            ]
+                        }
+                    }
                 ]
             };
 
-            if (!map.getSource('utilities')) {
-                map.addSource('utilities', { type: 'geojson', data: geojson });
-            }
+            map.addSource('distance-lines', { type: 'geojson', data: distanceLines });
 
-            if (!map.getLayer('water-line')) {
-                map.addLayer({
-                    'id': 'water-line',
-                    'type': 'line',
-                    'source': 'utilities',
-                    'filter': ['==', ['get', 'type'], 'water'],
-                    'layout': {
-                        'line-join': 'round',
-                        'line-cap': 'round'
-                    },
-                    'paint': {
-                        'line-color': 'rgb(0, 191, 255)',
-                        'line-width': 3,
-                        'line-dasharray': [2, 2]
-                    }
-                });
-            }
+            map.addLayer({
+                id: 'distance-lines-layer',
+                type: 'line',
+                source: 'distance-lines',
+                paint: {
+                    'line-color': '#7F8C8D',
+                    'line-width': 2,
+                    'line-opacity': 0.8,
+                    'line-dasharray': [1, 2]
+                }
+            });
 
-            if (!map.getLayer('electricity-line')) {
-                map.addLayer({
-                    'id': "electricity-line",
-                    'type': 'line',
-                    'source': 'utilities',
-                    'filter': ['==', ['get', 'type'], 'electricity'],
-                    'layout': {
-                        'line-join': 'round',
-                        'line-cap': 'round'
-                    },
-                    'paint': {
-                        'line-color': 'rgb(255, 215, 0)',
-                        'line-width': 3,
-                        'line-dasharray': [2, 2]
-                    }
-                });
-            }
-
-            if (!map.getLayer('utility-points')) {
-                map.addLayer({
-                    id: 'utility-points',
-                    type: 'circle',
-                    source: 'utilities',
-                    filter: ['has', 'marker-color'],
-                    paint: {
-                        'circle-radius': 6,
-                        'circle-color': ['get', 'marker-color'],
-                        'circle-opacity': 0.9,
-                        'circle-stroke-width': 2,
-                        'circle-stroke-color': 'rgb(255, 255, 255)'
-                    }
-                });
-            }
-
-            if (!map.getLayer('utility-labels')) {
-                map.addLayer({
-                    id: 'utility-labels',
-                    type: 'symbol',
-                    source: 'utilities',
-                    filter: ['has', 'title'],
-                    layout: {
-                        'text-field': ['get', 'title'],
-                        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
-                        'text-size': 12,
-                        'text-offset': [0, 1.5],
-                        'text-anchor': 'top',
-                        'visibility': 'none'
-                    },
-                    paint: {
-                        'text-color': 'rgb(0, 0, 0)',
-                        'text-halo-color': 'rgb(255, 255, 255)',
-                        'text-halo-width': 1
-                    }
-                });
-            }
-
-                        // Добавяне на 3D модел с Threebox
-            if (!map.getLayer('3d-model-layer')) {
-                map.addLayer({
-                    id: '3d-model-layer',
-                    type: 'custom',
-                    renderingMode: '3d',
-                    onAdd: function () {
-                        const baseCoords = [23.501949770585263, 42.62519333208837];
-                        const modelUrl = 'https://raw.githubusercontent.com/rubuilds/lozen-APP/main/models/plot1/plot1.gltf';
-
-                        const scale = 1.0; // Коригирай мащаба според нуждите
-                        const options = {
-                            obj: modelUrl,
-                            type: 'gltf',
-                            scale: scale, // Threebox приема единна стойност за мащаб
-                            units: 'meters',
-                            rotation: { x: 90, y: -90, z: 0 } // Коригираме ориентацията
-                        };
-
-                        tb.loadObj(options, (model) => {
-                            model.setCoords(baseCoords);
-                            model.setRotation({ x: 0, y: 0, z: 0 }); // Допълнителна ротация, ако е нужна
-                            tb.add(model);
-                            console.log(`Model loaded at coordinates:`, baseCoords);
-                        }, (error) => {
-                            console.error(`Failed to load model ${modelUrl}:`, error);
-                        });
-                    },
-                    render: function () {
-                        tb.update(); // Threebox се грижи за рендирането
-                    }
-                });
-            }
-        } // Добавяме липсващата затваряща скоба за функцията loadGeoJSON()
-        map.on('click', 'utility-points', function(e) {
-            const feature = e.features[0];
-            const title = feature.properties.title;
-
-            new mapboxgl.Popup()
-                .setLngLat(e.lngLat)
-                .setHTML(`<h3>${title}</h3>`)
-                .addTo(map);
-        });
-
-        map.on('mouseenter', 'utility-points', function() {
-            map.getCanvas().style.cursor = 'pointer';
-        });
-
-        map.on('mouseleave', 'utility-points', function() {
-            map.getCanvas().style.cursor = '';
-        });
+            map.addLayer({
+                id: 'distance-labels',
+                type: 'symbol',
+                source: 'distance-lines',
+                layout: {
+                    'text-field': ['concat', ['get', 'title'], '\n', ['get', 'distance'], ' (', ['get', 'time'], ')'],
+                    'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+                    'text-size': 12,
+                    'text-offset': [0, 1],
+                    'text-anchor': 'center'
+                },
+                paint: {
+                    'text-color': '#2C3E50',
+                    'text-halo-color': '#FFFFFF',
+                    'text-halo-width': 1
+                }
+            });
+        }
 
         document.querySelectorAll('.info-button').forEach(button => {
             button.addEventListener('click', function() {
